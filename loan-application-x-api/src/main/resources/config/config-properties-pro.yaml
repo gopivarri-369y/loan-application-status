@@ -1,0 +1,10 @@
+http :
+  host : "0.0.0.0"
+  port : "8081"
+
+papi-request : 
+  host : "loan-application-status-p-api-zr9fp9.5sc6y6-1.usa-e2.cloudhub.io"         
+  basepath : "api"      
+  path : "loan/status/update" 
+  client_id : "0c5ff173846546a39c6080878a0915b0"  
+  client_secret : "25eB4d4027bc4EC1Ad5A9DC5C36ceF2d"  

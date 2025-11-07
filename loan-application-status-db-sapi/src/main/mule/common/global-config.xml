@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="89f90081-9752-483f-ad28-3de4ecb63542" file="config\config-properties-${mule.env}.yaml" />
+	<http:listener-config name="loan-application-status-db-sapi-httpListenerConfig" doc:name="HTTP Listener config" doc:id="093d3e70-ad19-40e2-81d9-49aeb3c07ac5" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<snowflake:snowflake-config name="Snowflake_Config" doc:name="Snowflake Config" doc:id="c0776655-6743-4991-a82a-0eeb1960ccdc" >
+		<snowflake:snowflake-connection accountName="${database.AccountName}" warehouse="${database.warehouse}" database="${database.database}" schema="${database.schema}" user="${database.user}" password="${secure::database.password}" role="${database.role}" />
+	</snowflake:snowflake-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="64cbddb2-fab2-4b46-a28e-cb7841a8a085" file="config\config-properties-${mule.env}.yaml" key="${mule.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="4d6f22d9-0b16-4061-9097-1459ffc7a38c" name="loan-application-status-db-sapi-config" api="resource::4f105f33-ac28-42d4-8771-e2e0cfeb419d:loan-application-status-db-sapi:1.0.11:raml:zip:loan-application-status-db-sapi.raml" />
+</mule>

@@ -1,0 +1,12 @@
+http :
+  host : "0.0.0.0"
+  port : "8081"
+  
+database : 
+  AccountName : "YDHIYOP-HY96290" #${database.AccountName}
+  warehouse : "COMPUTE_WH"  #${database.warehouse}
+  database : "FINANCE"      #${database.database}
+  schema : "PUBLIC"     #${database.schema}
+  user : "GOPIVARRI"    #${database.user}
+  password : "![Au03ToM6bILSK1fArxeHvg==]" #${database.password}
+  role : "ACCOUNTADMIN"     #${database.role}

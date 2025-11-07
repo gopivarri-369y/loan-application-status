@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:listener-config name="loan-application-status-papi-httpListenerConfig" doc:name="HTTP Listener config" doc:id="23d826d4-932a-4d19-8c75-86a946a12b74" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="b6654de7-2061-412b-ab8b-a85ca2d6a28a" file="config\config-properties-${mule.env}.yaml" />
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="3e1a5a4a-c8fa-4606-b420-6f42f5c38220" name="loan-application-status-papi-config" api="resource::4f105f33-ac28-42d4-8771-e2e0cfeb419d:loan-application-status-papi:1.0.3:raml:zip:loan-application-status-papi.raml" />
+	<http:request-config name="snowflake-database-fetching-data" doc:name="HTTP Request configuration" doc:id="318f3c58-c34a-4c54-b9c8-a4ceaa494095" basePath="/${snowflake-db.basepath}" >
+		<http:request-connection host="${snowflake-db.host}" port="${snowflake-db.port}"/>
+	</http:request-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="bd524df2-9bea-4ee5-b367-b3c49c1218bf" >
+		<email:smtp-connection host="${smtp.host}" port="${smtp.port}" user="${smtp.user}" password="${secure::smtp.password}" >
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="208a8557-916f-4a4b-9967-f599cfbf0c6a" file="config\config-properties-${mule.env}.yaml" key="mulesoft" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery apiId="20586746" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="23ccccdd-c6c1-4776-954e-43efa4e3f90e" flowRef="loan-application-status-papi-main" />
+</mule>

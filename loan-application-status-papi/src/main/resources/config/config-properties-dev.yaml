@@ -1,0 +1,20 @@
+http :
+  host : "0.0.0.0"
+  port : "8082"
+  
+  
+snowflake-db :
+    host : "0.0.0.0" 
+    port : "8083"
+    basepath : "api"
+    selectpath : "fetchingdata"
+    updatepath : "updateloanrecords" 
+    client_id : "0c5ff173846546a39c6080878a0915b0" 
+    client_secret : "25eB4d4027bc4EC1Ad5A9DC5C36ceF2d"  
+smtp :
+  host : "smtp.gmail.com"
+  user :  "gopivarri1@gmail.com"
+  password : "![8y0brTZk+zf3FMG8FgpxDbJsG8G7t6Db]"
+  port : "587"
+  from : "gopivarri1@gmail.com"
+  

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="calling-process-apiSub_Flow" doc:id="b6f0f64b-c4a5-40d1-89fd-70b72dc49f33" >
+		<logger level="INFO" doc:name="entryFlowCheck" doc:id="64279537-1097-42e2-b5fa-2bf92ac760b1" message='#["entrying Into the flow : calling-process-apiSub_Flow "]'/>
+		<try doc:name="Try" doc:id="3c93bddd-ad08-42e8-902d-aacfdb8a0ad3" >
+			<logger level="INFO" doc:name="Calling Papi Check" doc:id="cf6d9fb2-b945-4760-b432-917b81fcc40f" message='#["calling the papi Request"]' />
+			<http:request method="POST" doc:name="Calling the Papi" doc:id="1a0d60ea-1505-4cb4-8992-1b3e9dfa0df3" config-ref="callin-papi-api" path="/${papi-request.path}" responseTimeout="3000000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+  	client_secret: p('papi-request.client_secret'),
+ 	 client_id: p('papi-request.client_id')
+}]]]></http:headers>
+		</http:request>
+			<logger level="DEBUG" doc:name="Response OF papi" doc:id="cc575cfb-703f-4f06-8373-af7fb86667f5" message='#[["successfully papi is executed",{&#10;	response : payload&#10;}&#10;]]' category="loan" />
+			<ee:transform doc:name="responsePayload" doc:id="1cad8e24-4db5-47b4-a7d9-830cfdd4137a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="be6bdcf5-acd1-40be-804f-77409219f38b" >
+					<set-variable value="#[400]" doc:name="httpStatusVariable" doc:id="98ec729b-c8bd-4ec5-b9ca-03e5ab701d10" variableName="httpStatus"/>
+					<ee:transform doc:name="errorResponsePayload" doc:id="32569b3e-c1d0-42aa-83c4-9b596a1becbb" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[output application/json
+---
+error.errorMessage.payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="exitFlowCheck" doc:id="c61a3b0e-dd2a-41dd-88c3-2076f7a0bc9e" message='#["exiting The flow : calling-process-apiSub_Flow"]'/>
+	</sub-flow>
+</mule>

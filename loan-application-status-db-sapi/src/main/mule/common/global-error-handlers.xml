@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="global-error-handlersError_Handler" doc:id="0d48e9ad-da91-49f8-8a68-ceff24c345a6" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9433c4a3-0005-447c-9160-8ae74f13fc13" type="APIKIT:BAD_REQUEST,MULE:EXPRESSION,APIKIT:NOT_IMPLEMENTED,APIKIT:UNSUPPORTED_MEDIA_TYPE,APIKIT:NOT_ACCEPTABLE,APIKIT:METHOD_NOT_ALLOWED,APIKIT:NOT_FOUND" >
+			<flow-ref doc:name="global-error-handlers-error-response-Sub_Flow" doc:id="c8e9ef1f-a229-4cda-b189-4aee0b27b999" name="global-error-handlers-error-response-Sub_Flow"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global-error-handlers-error-response-Sub_Flow" doc:id="39c11eb1-9f4e-43df-96ae-cd743a738c6a" >
+		<ee:transform doc:name="commonErrorResponse" doc:id="59fb0548-d985-4b97-81d2-9850770fc7e2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "timestamp": now() as DateTime,
+  "details": vars.details
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

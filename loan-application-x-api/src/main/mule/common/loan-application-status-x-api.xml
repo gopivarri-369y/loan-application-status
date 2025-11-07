@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="loan-application-status-x-api-main">
+        <http:listener path="/api/*" config-ref="loan-application-status-x-api-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="FlowEntryCheck" doc:id="14006648-a589-4d99-bbd5-ffeae78c8859" message="#[&quot;entrying into the flow : loan-application-status-x-api-main &quot;]" />
+        <apikit:router config-ref="loan-application-status-x-api-config" doc:name="APIkit Router."/>
+        <logger level="INFO" doc:name="exitFlowCheck" doc:id="7ab59e7f-efbc-483e-807f-302fe855f9f1" message="#[&quot;exiting from the flow : loan-application-status-x-api-main &quot;]" />
+        <error-handler ref="global-error-handlersError_Handler" />
+    </flow>
+    <flow name="post:\loan\status\update:application\json:loan-application-status-x-api-config">
+        <flow-ref doc:name="calling-process-apiSub_FlowFlow Reference" doc:id="7c6cd685-e5e5-4b93-a572-269196f3f351" name="calling-process-apiSub_Flow" />
+    </flow>
+</mule>

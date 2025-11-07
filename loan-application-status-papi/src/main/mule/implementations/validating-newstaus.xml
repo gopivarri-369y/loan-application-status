@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<sub-flow name="validating-newstatus-Sub_Flow" doc:id="9daa58e5-769b-4254-a212-27d697f58470" >
+		<logger level="INFO" doc:name="FlowEntryCheck" doc:id="3688d2a8-f21e-403c-82ba-125b56e39a3e" message='#["entring to the validatiing SubFLow"]'/>
+		<ee:transform doc:name="newstatus" doc:id="f029c48b-bb36-4b3e-acd8-75f802d24e7c">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="newstatus"><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="validating-newstaus-Applicant_idSubFlowFlow Reference" doc:id="fd8705c7-c517-4a63-a7cf-5162e467baf2" name="validating-newstaus-Applicant_idSubFlow"/>
+		<logger level="INFO" doc:name="flowExitCheck" doc:id="f6ed9f70-161c-4c2c-91cb-6293a72b2ad7" message='#["exiting From the Flow"]'/>
+	</sub-flow>
+	<sub-flow name="validating-newstaus-Applicant_idSubFlow" doc:id="4decf211-0009-4be9-bb7e-2679c6718407">
+		<logger level="INFO" doc:name="entryflowCheck" doc:id="ce76bd81-6e1d-4368-9a06-10b697df6672" message='#["entrying the flow :validating-newstaus-Applicant_idSubFlow , To valadiate the Applicant is Present or not  "]' />
+		<ee:transform doc:name="FetchingAPplicatn_idquery" doc:id="c3d7f870-074f-4e4c-af4b-84030efd762f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"dynamicQuery" : "select * from applicants where applicant_id = '"++ vars.newstatus.applicantId replace /"/ with "" ++ "'"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="fetching-records-sub_flowFlow Reference" doc:id="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" name="fetching-records-sub_flow" />
+		<choice doc:name="Choice" doc:id="a964470e-69f5-4291-822a-1c834f6503a2">
+			<when expression="#[isEmpty(payload)]">
+				<set-variable value="400" doc:name="errorStatuscode" doc:id="8144916c-4fca-4036-842f-9ce10fafd924" variableName="httpStatus" />
+				<ee:transform doc:name="errorvariable" doc:id="5de6c4bc-a413-4190-8d22-ed2ea5dc80a1">
+					<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status" : "Failure",
+	"response":"given ApplicantId " ++ vars.newstatus.applicantId ++ " is Not Found"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+					</ee:variables>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<flow-ref doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="d6fb4833-062f-4314-84d1-d36be3f389d6" name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="exitFlowCheck" doc:id="b6376aff-c64b-4b2f-8832-e57d905e709b" message='#["exiting From the FLow : validating-newstaus-Applicant_idSubFlow "]' />
+	</sub-flow>
+	<sub-flow name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="0af65f4e-3166-4195-a493-e21003730ac9">
+		<logger level="INFO" doc:name="entryFlowCheck" doc:id="e1a96d3f-97cf-43bb-96ce-ee0c21418824" message='#["validating-loanId-mismatch-Sub_Flow"]' />
+		<ee:transform doc:name="querymessage" doc:id="8e452cf3-5dfd-4454-8db3-0de86178ec5f">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "dynamicQuery" : "select loan_id from loanapplications where applicant_id = '" ++ vars.newstatus.applicantId replace /"/ with "" ++ "'"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="fetching-records-sub_flow" doc:id="6ac5a2bd-d930-419e-8a68-fa0b23656357" name="fetching-records-sub_flow" />
+		<choice doc:name="Choice" doc:id="c5cc23e4-72d1-47c3-98fa-21f6b41df6c8">
+			<when expression="#[payload.LOAN_ID contains vars.newStatus.loanId]">
+				<choice doc:name="Choice" doc:id="f5310997-5017-4ad2-a2b0-f9438be2e95a">
+					<when expression='#[(vars.newStatus.status == "Rejected" or vars.newStatus.status == "On Hold") and isEmpty(vars.newStatus.remarks)]'>
+						<set-variable value="400" doc:name="errorStatuscode" doc:id="24a22b45-9ac0-49cb-bc7a-806c9a5d3f01" variableName="httpStatus" />
+						<ee:transform doc:name="errorResponseOFRemarks" doc:id="0ff98bbb-de17-4b4a-bda3-5a8953538e2a">
+							<ee:message>
+							</ee:message>
+							<ee:variables >
+								<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "FAILED",
+	"reason": "Remarks must be provided for 'Rejected' or 'On Hold' status." 
+	}]]></ee:set-variable>
+							</ee:variables>
+						</ee:transform>
+						<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="72b7e8f0-4117-47af-839f-3c2e11ee056a" name="sending-error-to-email-Subflow"/>
+						<ee:transform doc:name="FinalErrorResponse" doc:id="6b393e52-cb7b-40cd-8750-375e659b6ab7" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<flow-ref doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="ec13c916-ec80-42c6-a09b-3e289dba342b" name="validating-newsatus-duplicateDataEntry-subflow" />
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise>
+				<set-variable value="400" doc:name="errorStatuscode" doc:id="48288e06-2382-42be-840f-e801fb361d97" variableName="httpStatus" />
+				<ee:transform doc:name="Error Response OF Loan_ID Mismatch" doc:id="628dbd4e-41f5-4191-aeda-ec21b11a6859">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+	"status": "FAILED", 
+	"reason": "Loan ID "++ vars.newStatus.loanId ++ "doesnot match with the " ++ vars.newstatus.applicantId
+ }]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="651a6642-cfd3-4b3a-b89f-cff9cd0780cb" name="sending-error-to-email-Subflow" />
+				<ee:transform doc:name="FinalErrorResponse" doc:id="3b135a41-c4c6-426c-9df0-961cb7547e29" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="exitFlowCheck" doc:id="013024f1-b6a7-499e-81af-af7a8b537e51" message='#["Exiting From the : validating-loanId-mismatch-Remarks-Sub_Flow "]'/>
+	</sub-flow>
+	<sub-flow name="validating-newsatus-duplicateDataEntry-subflow" doc:id="55654523-58c0-4e05-b5e4-225e09f165e0" >
+		<logger level="INFO" doc:name="entryFlowCheck" doc:id="88452b8d-0068-4e89-91f6-eefff9fe33a0" message='#["entered into the fetching-data-subflow"]'/>
+		<ee:transform doc:name="queryToFetchLoanapplicants" doc:id="d845137d-4bab-4919-b11d-99f2e1a02336">
+				<ee:message>
+					<ee:set-payload><![CDATA[output application/json
+---
+{
+	"dynamicQuery" : "select * from loanapplications where loan_id = '" ++ vars.newstatus.loanId ++ "'"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		<flow-ref doc:name="fetching-records-sub_flow" doc:id="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" name="fetching-records-sub_flow"/>
+		<ee:transform doc:name="prevStatus" doc:id="c1c2ccd2-bf93-4266-8ab7-4a77c183e4e9">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="prevStatus"><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "loanId" : payload[0].LOAN_ID,
+    "applicantId " : payload[0].APPLICANT_ID,
+    "status": payload[0].STATUS,
+    "updatedBy":payload[0].UPDATED_BY,
+    "timestamp":payload[0].TIMESTAMP,
+    "remarks":payload[0].REMARKS
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="cdff1724-ca91-4266-9b9c-cf1d20eec854" >
+			<when expression="#[vars.newstatus.status == vars.prevStatus.status]">
+				<set-variable value="400" doc:name="errorStatuscode" doc:id="4b06752c-2103-434d-b3de-cd8a04da1d33" variableName="httpStatus" />
+				<ee:transform doc:name="Error Response Of Same Status" doc:id="af19aab9-16cb-424e-bb71-ddd8ffc90b37" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/json
+---
+{ "status": "IGNORED", "reason": "Duplicate loan update received for LN20251001 with same status." }]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="ca5325c7-73c9-43d6-9040-0b74821a621a" name="sending-error-to-email-Subflow" />
+				<ee:transform doc:name="FinalErrorResponse" doc:id="0a182b55-a002-4851-bd52-d81ca4b23c88" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[isEmpty(vars.prevStatus)]">
+				<set-variable value="400" doc:name="errorStatuscode" doc:id="a00a0d83-56ff-4e4b-93d3-db857477f574" variableName="httpStatus" />
+				<ee:transform doc:name="Error Response OF Loan_ID Not Found" doc:id="44ab483b-fd0c-4ba2-94f5-4c840c927d71" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+"status": "FAILED", "reason": "Loan ID LN9999 not found in system."
+}
+]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="291f3df8-1efc-40ff-9fb2-23379f923028" name="sending-error-to-email-Subflow" />
+				<ee:transform doc:name="FinalErrorResponse" doc:id="cf9106fc-037c-439d-a0ef-e3e4e068dbd9" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<flow-ref doc:name="validation-transistion-subflow" doc:id="4766f8fc-6cbb-4026-9518-9d68b30a06bf" name="validation-transistion-subflow"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="exitFlowCheck" doc:id="c665f6de-cb39-4ac3-8c87-c84289433f94" message='#["exiting From the Fetching-data subflow"]'/>
+	</sub-flow>
+	<sub-flow name="validation-transistion-subflow" doc:id="51074eb7-bc30-408a-993d-25f92d70cb66" >
+		<ee:transform doc:name="distrubtionCheck" doc:id="2e0eed46-ea10-44f0-b4e0-1ef094157fc5">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+fun errorMessage(prevStatus, newStatus) = {
+    status: "FAILED",
+    reason: "Invalid Transition: cannot move from " ++ prevStatus ++ " to " ++ newStatus
+}
+var newStatus =  vars.newstatus.status
+var prevStatus = vars.prevStatus.status
+var invalidTransitions = [ "Approved", "Rejected", "Disbursed", "On Hold"]
+---
+if (
+    (prevStatus == "Under Review" and newStatus == "Received") or
+    (prevStatus == newStatus or (invalidTransitions contains prevStatus))
+or 
+    (prevStatus == "Received" and (invalidTransitions contains newStatus))
+)
+    errorMessage(prevStatus, newStatus)
+else
+    payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<choice doc:name="Choice" doc:id="17504163-ae9f-4894-98a9-2a2fb07eb796" >
+			<when expression='#[payload.status == "FAILED"]'>
+				<set-variable value="400" doc:name="errorStatuscode" doc:id="cf506632-62a7-499a-aefb-1a54c6ce0b82" variableName="httpStatus" />
+				<ee:transform doc:name="Error Response Of Distrubtion Check" doc:id="23a0f370-ccd2-43c4-a7f9-0d78fe46e71a" >
+					<ee:message >
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="9c1b49f5-3692-4e18-a9f5-af0334d0eec2" name="sending-error-to-email-Subflow" />
+				<ee:transform doc:name="FinalErrorResponse" doc:id="8dd37440-a7f8-4d17-afbf-86cfba2f07cc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<flow-ref doc:name="updating-newstatus-database-sub-flow" doc:id="c0943bdd-0ace-4cfb-8fdc-328da88f169c" name="updating-newstatus-database-sub-flow"/>
+				<ee:transform doc:name="FetchingApplicantsRecordsQuery" doc:id="598e1289-bc9f-44ae-a83c-ad26e8566a8d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var newStaus = vars.newstatus
+---
+{
+	"dynamicQuery":"select * from applicants where applicant_id = '"++ newStaus.applicantId ++ "'"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="fetching-records-sub_flow" doc:id="55426b38-eee2-45ce-b890-55cae74059c0" name="fetching-records-sub_flow"/>
+				<ee:transform doc:name="emailContent" doc:id="79ef489c-e77e-465f-948a-9c1605219d46">
+					<ee:message>
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Dear " ++ payload[0].NAME ++ " , your loan application " ++ vars.newstatus.loanId ++ " has been moved from " ++ vars.prevStatus.status ++ " to " ++ vars.newStatus.status ++ "Remarks: " ++ vars.newStatus.status]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="email" ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0].EMAIL]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<ee:transform doc:name="finalResponse" doc:id="95517eef-a5da-4950-becf-b50da3b44b38">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status": "SUCCESS",
+  "message": "Loan " ++ vars.newstatus.loanId ++ " status updated and applicant notified successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<!-- [STUDIO:"Try"]<try doc:name="Try" doc:id="acd4c237-3990-481e-b4d4-946f2f966b50" >
+					<email:send doc:name="Send" doc:id="cf7889f4-aa41-4455-95c0-f082c8cb030c" config-ref="Email_SMTP" fromAddress="#[p('smtp.from')&#93;" subject="loan Application Updation" toAddresses="#[[vars.email&#93;&#93;">
+					<email:body contentType="text/plain">
+						<email:content><![CDATA[#[%dw 2.0
+output application/java
+&#45;&#45;-
+write(payload, "application/json")&#93;&#93;&#93;></email:content>
+					</email:body>
+				</email:send>
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f46dce4c-87b0-4274-ba45-ff6ff2ecfa71" type="ANY">
+							<ee:transform doc:name="emailErrorResponse" doc:id="141ca2e4-dc58-4470-a2ed-e53ace322d82" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+{
+  "status": "FAILED",
+  "reason": "Notification delivery failed. Logged for retry."
+}&#93;&#93;></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+						</on-error-continue>
+					</error-handler>
+				</try> [STUDIO] -->
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="updating-newstatus-database-sub-flow" doc:id="565a395c-bf37-4c96-8c6c-94b0ce4971e0" >
+		<logger level="INFO" doc:name="entryFlowCheck" doc:id="01ccebcf-21f5-4294-90c7-70bbcffd5d72" message='#["entering into the updating-newstatus-database-sub-flow"]'/>
+		<until-successful maxRetries="1" doc:name="Until Successful" doc:id="ea44c93a-0cf8-49a1-910b-e21e9d64b807" millisBetweenRetries="6000">
+			<logger level="DEBUG" doc:name="calling the database" doc:id="30f1bd0b-f8d4-4466-8e3c-bc3c0da8e3d9" message='#["calling The database To update the newstatus"]'/>
+			<http:request method="PUT" doc:name="callingDatabaseForUpdation" doc:id="1064b732-cce7-4bfe-9c0b-7d3b381a4c6c" config-ref="snowflake-database-fetching-data" path="/${snowflake-db.updatepath}" responseTimeout="300000">
+				<http:body ><![CDATA[#[vars.newstatus]]]></http:body>
+				<http:headers ><![CDATA[#[{
+  	client_secret: p('snowflake-db.client_secret'),
+ 	client_id: p('snowflake-db.client_id')
+}]]]></http:headers>
+			</http:request>
+			<logger level="INFO" doc:name="databaseUpdatationResponse" doc:id="93df2800-69c4-4962-b77c-2d6e9b2d7393" message='#["Response of the updation"]'/>
+		</until-successful>
+	</sub-flow>
+	<sub-flow name="sending-error-to-email-Subflow" doc:id="b5266658-57ca-4821-811b-098405e4adcc" >
+		<logger level="INFO" doc:name="flowEntryCheck" doc:id="5bfcdd02-97b1-444a-a9b7-7327fb4ca730" message='#["entrying into the flow : sending-error-to-email-Subflow To send the error response through email"]'/>
+		<ee:transform doc:name="FetchingApplicantsRecordsQuery" doc:id="d57a6d3b-ccd9-4814-9186-86fef35a6205" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var newStaus = vars.newstatus
+---
+{
+	"dynamicQuery":"select * from applicants where applicant_id = '"++ newStaus.applicantId ++ "'"
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="fetching-records-sub_flow" doc:id="b7340884-191d-4db9-ab69-049e511650ed" name="fetching-records-sub_flow"/>
+		<ee:transform doc:name="emailContent" doc:id="3620d06b-5ce2-41c0-95b0-13340af32b76" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var loanId = vars.newstatus.loanid default ""
+---
+"Dear " ++ payload[0].NAME ++ 
+", your loan application " ++ 
+( if (isEmpty(loanId)) "not provided the loanId also" else loanId ) ++
+" has been failed due to " ++ vars.error.reason
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="email" ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0].EMAIL]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="sending-email-subflowFlow Reference" doc:id="31dc2842-ed8a-44c3-aa76-917080ab24c8" name="sending-email-subflow" />
+		<logger level="INFO" doc:name="flowExitCheck" doc:id="fc641f7f-1d83-48a0-a10c-ca6baceed4a4" message='#["Exiting From the Flow : sending-error-to-email-Subflow"]'/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="loan-application-status-papi-test-suite.xml" />
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-configTest" doc:id="33f127dd-7132-4cc4-8758-1052cf4978c8" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="a62c3f95-7a78-47b8-afda-255209c92803" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="a2dbb1db-34c1-480e-8833-57954a04d767" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="5010873d-aa33-412e-9a30-35194685e701" processor="flow-ref">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002",&#10;    "APPLICANT_ID": "APP1002",&#10;    "STATUS": "Approved",&#10;    "UPDATED_BY": "BranchClerk01",&#10;    "TIMESTAMP": "2025-10-26T04:15:00",&#10;    "REMARKS": "Application received and logged in system"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="15baaf2d-bb5d-4436-b596-04bca585acfa" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="5a7109f2-0cd7-4dda-abe6-ec6e78161983" processor="email:send">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="409e8644-3402-4edf-83d8-6f6787b85618" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Under Review",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="fdb5882c-1152-4e1c-9b33-bfc35a30ce9f" name="post:\loan\status\update:application\json:loan-application-status-papi-config"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-ErrorloanidNotContains-configTest" doc:id="814d69cb-f22f-4503-8c06-4d0ca0a1bd5f" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="3edb4939-c313-41f6-844b-e54a22f46466" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="1420db2b-d165-455d-b078-6d5cf3549f3d" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251000"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="b6ad0dab-f144-4623-8ff3-43402e6a72a3" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002",&#10;    "APPLICANT_ID": "APP1002",&#10;    "STATUS": "Approved",&#10;    "UPDATED_BY": "BranchClerk01",&#10;    "TIMESTAMP": "2025-10-26T04:15:00",&#10;    "REMARKS": "Application received and logged in system"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="c77fe357-b02c-4e4b-9b1c-22dd8d93347f" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="34a6ee35-ccda-4d09-bb07-a8d22d9fee07" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="bfb7c33c-9440-45a1-b605-cea45068d49f" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Under Review",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="f4485310-a47d-4993-8434-fd39561afe1c" name="post:\loan\status\update:application\json:loan-application-status-papi-config" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-ErrorRemarks-configTest" doc:id="372736b3-e406-4eba-8d79-427d672ce206" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="4b75fc38-392a-4302-919f-b13e7525ecfc" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="f1b1a13a-8efa-403e-82dc-a17a96fba6e2" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="e6ca5974-568b-4657-ab33-7c57503fa069" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002",&#10;    "APPLICANT_ID": "APP1002",&#10;    "STATUS": "Approved",&#10;    "UPDATED_BY": "BranchClerk01",&#10;    "TIMESTAMP": "2025-10-26T04:15:00",&#10;    "REMARKS": "Application received and logged in system"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="367ba57e-ec8a-4737-96c5-5fcf9d5dfc4f" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="3162dbd0-edf1-4d1b-9ce0-d8bcafbd5933" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="inputpayload" doc:id="cdef9908-d5d3-4f9e-88f4-3db2529d6f7e" >
+				<munit:payload value='#[output application/json&#10;---&#10;{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Rejected",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="799ec66c-a92e-4472-8424-3a83fd947435" name="post:\loan\status\update:application\json:loan-application-status-papi-config" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-errorduplicate-configTest" doc:id="fc5b3c1e-0ed4-46ec-8a68-ea94bbeaf5ba" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="1ba89b24-51fd-4936-af5c-79bb423d1780" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="4f7e60cc-9b9d-4507-acb1-77e671787280" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="92358f5e-f295-4b48-9a0d-1a6cc3884893" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002",&#10;    "APPLICANT_ID": "APP1002",&#10;    "STATUS": "Approved",&#10;    "UPDATED_BY": "BranchClerk01",&#10;    "TIMESTAMP": "2025-10-26T04:15:00",&#10;    "REMARKS": "Application received and logged in system"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="550f0e2e-497c-4cc2-8139-704b499f509d" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="025125ed-8e70-4611-8610-34383d1aa7c6" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="94b29046-1f13-45f2-bd56-847e2ee5dd74" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Approved",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="b3d10553-823f-400b-a20c-21b2d571e1f1" name="post:\loan\status\update:application\json:loan-application-status-papi-config" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-duplicateprevEmpty-configTest" doc:id="49d50dbb-fc6d-4e63-9750-01a0191b9d9c" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="5279f738-ba76-4b94-b9bc-e30ccccb5590" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="fe2b0bdd-230e-4a16-ac77-de50650f7c82" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="593390bb-9fd5-4fc4-bb19-0c030a47f4ab" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="22f64c01-bc53-472a-bce4-227aaf7e95bd" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="a208e677-847b-4679-a43c-637f18a5a997" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="bb8d5744-44a3-41ef-8e15-304c107bef9d" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Under Review",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="b8d0115b-acaf-4b95-9d51-b5b2b4047e32" name="post:\loan\status\update:application\json:loan-application-status-papi-config" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-post:\loan\status\update:application\json:loan-application-status-papi-fullsuccesscase-configTest" doc:id="ce2cafbd-a292-408e-8aab-d977c9cfc500" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="validating-newstaus-Applicant_idSubFlow" doc:id="564f2ab5-fd67-4ff6-aae5-23b5cec78e69" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flowFlow Reference" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="85a2bf2e-1c8a-4023-8a72-78c44ab8be95" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newstatus-loanId-mismatch-Remarks-Sub_Flow" doc:id="5b59bafe-1112-413a-96b8-df96c7736891" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6ac5a2bd-d930-419e-8a68-fa0b23656357" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="validating-newsatus-duplicateDataEntry-subflow" doc:id="3b27f758-2fee-4276-9c11-58501036c641" processor="flow-ref" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching-records-sub_flow" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="4feb023b-82f0-4a5a-b5d8-3a98a6c37882" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "LOAN_ID": "LN20251002",&#10;    "APPLICANT_ID": "APP1002",&#10;    "STATUS": "Under Review",&#10;    "UPDATED_BY": "BranchClerk01",&#10;    "TIMESTAMP": "2025-10-26T04:15:00",&#10;    "REMARKS": "Application received and logged in system"&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="updating | http request" doc:id="816c0642-8c95-4fea-a084-d1e0c7658179" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="callingDatabaseForUpdation" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="1064b732-cce7-4bfe-9c0b-7d3b381a4c6c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="952862e6-610f-429f-9f1c-0be2696ab8ec" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="e01f5459-73c6-4131-a78a-2c30296c9fad" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="0c6063c5-37b0-4e9c-8e25-6d2d57fe2e1d" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Approved",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to post:\loan\status\update:application\json:loan-application-status-papi-config" doc:id="510c2daf-b84d-4d78-a392-0aa8d5f4ae80" name="post:\loan\status\update:application\json:loan-application-status-papi-config" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-loan-application-status-papi-mainTest" doc:id="c2c3d096-2125-4832-8e24-cc38c56ae78a" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="ApikitRouter" doc:id="ba3fa3f8-97f6-40dd-9070-1b29fe478624" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="loan-application-status-papi-config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="APIkit Router." attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="loan-application-status-papi-config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="APIkit Router." attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:BAD_REQUEST" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="b03e44b2-4f43-47b1-ae58-199aa4b734c9" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="131d023e-5e12-44ad-9138-8f5f3d28f764" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="a6e3edf9-a527-4ebd-bdb2-6011e0f1fe7f">
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Approved",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to loan-application-status-papi-main" doc:id="393d7387-7a24-454f-b2ea-d93bc2ebbd51" name="loan-application-status-papi-main"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-papi-test-suite-loan-application-status-papi-mainTest1" doc:id="9b2202d7-19ac-4c2e-afc3-c7bb1f2d46c3" description="Test" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="ApikitRouter" doc:id="21986b67-3dde-468e-a910-c22e19b4a6b3" processor="apikit:router" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="loan-application-status-papi-config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="APIkit Router." attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="loan-application-status-papi-config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="APIkit Router." attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:NOT_IMPLEMENTED" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name="fetchingLoanApplications | http request" doc:id="e2931f03-f074-49d0-ab98-0d54a861b691" processor="http:request" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetchingLoanApplications" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="55b8187e-0b91-4e1d-a782-65421d00d4fe" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;  {&#10;    "APPLICANT_ID": "APP1002",&#10;    "NAME": "fahad",&#10;    "EMAIL": "fahadalikhan260@gmail.com",&#10;    "PHONE": 9876543210&#10;  }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:mock-when doc:name=" email send" doc:id="052fe5ee-7ff5-483e-8fd9-607735693f74" processor="email:send" >
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Send" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Email_SMTP" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;""]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="3d5de475-79b6-4f2a-af1a-57266bbd1b15" >
+				<munit:payload value='#[{&#10;  "loanId": "LN20251002",&#10;  "applicantId": "APP1002",&#10;  "status": "Approved",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-25T22:45:00Z",&#10;  "remarks": "Application under process and logged in system"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to loan-application-status-papi-main" doc:id="e76ec7a3-eeef-482e-bc77-d034ad6c8161" name="loan-application-status-papi-main" />
+		</munit:execution>
+	</munit:test>
+
+
+</mule>

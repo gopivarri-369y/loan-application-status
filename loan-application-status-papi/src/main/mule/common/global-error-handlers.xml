@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="global-error-handlersError_Handler" doc:id="f21f931f-a0dd-4651-b277-1e8c73ac7198" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="b1da5f4b-a8fe-492c-b8a5-fc104178f857" type="APIKIT:BAD_REQUEST" >
+			<ee:transform doc:name="newstatus" doc:id="1b3e93ed-515f-4b70-904f-af3398615ee9">
+				<ee:message />
+				<ee:variables>
+					<ee:set-variable variableName="newstatus"><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<ee:transform doc:name="validationErrorResponse" doc:id="0abc153d-6394-4587-aa4b-4f032f9cc8b0" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+					<ee:set-variable variableName="error" ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	status : "failed",
+	"reason" : error.exception.localizedMessage replace "\n" with " , "
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<choice doc:name="Choice" doc:id="7c3e1d0b-d1dc-4c18-a258-08a0b057e47c" >
+				<when expression="#[isEmpty(payload.applicantId)]">
+					<logger level="INFO" doc:name="errorMessage" doc:id="49d81cc8-df05-40ee-9e8d-6b0145dd5169" message='#["cannot fetch due to the not provided applicant id"]'/>
+				</when>
+				<otherwise >
+					<flow-ref doc:name="sending-error-to-email-SubflowFlow Reference" doc:id="0519a2be-8ae7-4f3a-972b-9c25f63aaec9" name="sending-error-to-email-Subflow" />
+				</otherwise>
+			</choice>
+			<ee:transform doc:name="FinalErrorResponse" doc:id="49f0cbef-d766-4126-911c-88f4fd877f64">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.error]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate1" doc:id="b34f0972-62f5-4d7c-9ac0-5502dd0216ba" type="APIKIT:NOT_FOUND,APIKIT:NOT_IMPLEMENTED,APIKIT:UNSUPPORTED_MEDIA_TYPE,APIKIT:NOT_ACCEPTABLE,APIKIT:METHOD_NOT_ALLOWED" >
+			<flow-ref doc:name="global-error-handlers-error-response-Sub_Flow" doc:id="42c9a543-6b10-47df-8bd3-9b270f45be1c" name="global-error-handlers-error-response-Sub_Flow"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global-error-handlers-error-response-Sub_Flow" doc:id="fc591b98-2ffc-4ed4-9fe8-ffb3f4cba70f" >
+		<ee:transform doc:name="ErrorResponse" doc:id="482e7d23-8ed5-4d3d-981f-374c5c7a079c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "errorOrigin": p('application.name'),
+  "status" : "ERROR",
+  "message" :  error.description,
+  "description" : error.detailedDescription,
+  "timestamp": now() as DateTime,
+  "details": vars.details
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

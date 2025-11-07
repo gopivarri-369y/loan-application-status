@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="loan-application-status-db-sapi-test-suite.xml" />
+	<munit:test name="loan-application-status-db-sapi-test-suite-put:\updateloanrecords:application\json:loan-application-status-db-sapi-configTest" doc:id="e24f6b23-a449-49f2-a866-57532c17a551" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mocking snowflake:select Component" doc:id="9666d9a7-8d4b-4699-a3a9-9ab444e05acd" processor="snowflake:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="fetching Data" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="513b281c-1eb1-4820-b277-85d05e0e7425" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Snowflake_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;[&#10;    {&#10;        "APPLICANT_ID": "APP1002",&#10;        "NAME": "fahad",&#10;        "EMAIL": "fahadalikhan260@gmail.com",&#10;        "PHONE": 9876543210&#10;    }&#10;]]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="payload-fetchrecord-Set Event" doc:id="d46d1792-c3ca-4446-8041-3b25acbe89e2" >
+				<munit:payload value="#[output application/json&#10;---&#10;{&#10;    &quot;dynamicQuery&quot; : &quot;select * from applicants where applicant_id = 'APP1002'&quot;&#10;}]" />
+			</munit:set-event>
+			<flow-ref doc:name="post:\fetchingdata:application\json:loan-application-status-db-sapi-config" doc:id="f775f4fb-7b37-490e-937e-1a832b9d0cb1" name="post:\fetchingdata:application\json:loan-application-status-db-sapi-config"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-db-sapi-test-suite-post:\fetchingdata:application\json:loan-application-status-db-sapi-configTest" doc:id="c6ae758d-8647-4a80-9fe2-f33427276d2c" description="Test">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mocking snowflake:update" doc:id="99082ed5-025b-4d98-b3b6-40e731db028a" processor="snowflake:update">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="Update" attributeName="doc:name" />
+					<munit-tools:with-attribute whereValue="572ca685-2217-457c-8925-6e7f810091df" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value='#[output application/json&#10;---&#10;{&#10;    "status": "success",&#10;    "message": "data updated successfully"&#10;}]' />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="inputpaylod-updateSet Event" doc:id="e1c363bf-8dee-49d2-a354-3e6e076520c7" >
+				<munit:payload value='#[output application/json&#10;---&#10;{&#10;  "loanId": "LN20251004",&#10;  "applicantId": "APP1004",&#10;  "status": "Received",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-31T12:45:00Z",&#10;  "remarks": "Application rejected"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="put:\updateloanrecords:application\json:loan-application-status-db-sapi-config" doc:id="b11d9be3-d978-4c3d-9e33-70c650d2c9eb" name="put:\updateloanrecords:application\json:loan-application-status-db-sapi-config"/>
+		</munit:execution>
+	</munit:test>
+	<munit:test name="loan-application-status-db-sapi-test-suite-loan-application-status-db-sapi-mainTest" doc:id="67383b3b-ac52-45cd-a711-8c11093fd2a0" description="Test" expectedErrorType="APIKIT:BAD_REQUEST">
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock when" doc:id="d1a53aaa-893f-44c9-9485-af473329b931" processor="apikit:router">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="loan-application-status-db-sapi-config" attributeName="config-ref" />
+					<munit-tools:with-attribute whereValue="APIkit Router." attributeName="doc:name" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="APIKIT:BAD_REQUEST" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="inputpayloadSet Event" doc:id="97c5d2fb-f48c-48c4-88d5-f7a945f48ffa" >
+				<munit:payload value='#[output application/json&#10;---&#10;{&#10;  "loanId": "LN20251004",&#10;  "applicantId": "APP1004",&#10;  "status": "Received",&#10;  "updatedBy": "CreditOfficer02",&#10;  "timestamp": "2025-10-31T12:45:00Z",&#10;  "remarks": "Application rejected"&#10;}]' />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to loan-application-status-db-sapi-main" doc:id="56ef3837-46c1-443c-bc6c-f02c3a1b7da4" name="loan-application-status-db-sapi-main"/>
+		</munit:execution>
+	</munit:test>
+
+
+</mule>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="loan-application-status-papi-main">
+        <http:listener path="/api/*" config-ref="loan-application-status-papi-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="entryApiCheck" doc:id="2eab825d-2ec1-4588-b8b4-821887e91fcb" message='#["entering into the loan-application-status-papi"]'/>
+		<apikit:router config-ref="loan-application-status-papi-config" doc:name="APIkit Router."/>
+		<logger level="INFO" doc:name="exitApiCheck" doc:id="47b9cc68-51a2-4a5e-8ce6-55c1b7e2fd42" message='#["exiting From the  into the loan-application-status-papi"]'/>
+		<error-handler ref="global-error-handlersError_Handler" />
+    </flow>
+    <flow name="post:\loan\status\update:application\json:loan-application-status-papi-config">
+		<flow-ref doc:name="validatingSub_Flow" doc:id="0efdc968-2084-4e40-aca4-ca6ecd573ab0" name="validating-newstatus-Sub_Flow"/>
+    </flow>
+</mule>

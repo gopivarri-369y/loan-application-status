@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<sub-flow name="fetching-records-sub_flow" doc:id="ba3f5190-9d45-4cba-a8fa-c98a1f07a086" >
+		<until-successful maxRetries="2" doc:name="Until Successful" doc:id="c4e31569-bd01-43a7-9008-918e3ae27906" millisBetweenRetries="6000" >
+			<logger level="DEBUG" doc:name="Calling Database" doc:id="218d8332-27c6-49ee-b693-93a88aca2f41" message='#["Calling database to fetch the data from the loanapplications table , to validate the duplicate data entry"]' category="loans" />
+			<http:request method="POST" doc:name="fetchingLoanApplications" doc:id="55b8187e-0b91-4e1d-a782-65421d00d4fe" config-ref="snowflake-database-fetching-data" path="/${snowflake-db.selectpath}" responseTimeout="300000" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+  	client_secret: p('snowflake-db.client_secret'),
+ 	 client_id: p('snowflake-db.client_id')
+}]]]></http:headers>
+			</http:request>
+			<logger level="DEBUG" doc:name="DatabaseResponse" doc:id="da413469-17b5-437a-8246-1188eabc5652" message='#[{&#10;	"message" : "successfully fetched",&#10;	"response" : payload&#10;}]' category="loan"/>
+		</until-successful>
+	</sub-flow>
+	<sub-flow name="sending-email-subflow" doc:id="3fd76478-3c10-4092-a153-1599376466a3" >
+		<logger level="INFO" doc:name="entryCheck" doc:id="d9a78493-3d47-4883-94de-d2f6c02059f3" message='#["The flow entry point : sending-email-subflow"]'/>
+		<try doc:name="Try" doc:id="12742b5a-0ba1-40dd-a142-822d856d1f90" >
+			<logger level="DEBUG" doc:name="emailRequest" doc:id="b29b19d7-dcaf-4fae-97fb-be62b3db79d2" message='#["requesting the Email"]' category="loan"/>
+			<email:send doc:name="Send" doc:id="6f28bc7c-6727-46a1-8ad6-b106d5b763f5" config-ref="Email_SMTP" fromAddress="#[p('smtp.from')]" subject="loan Application Updation" toAddresses="#[[vars.email]]" >
+				<email:body contentType="text/plain" >
+					<email:content ><![CDATA[#[%dw 2.0
+output application/java
+---
+write(payload, "application/json")]]]></email:content>
+				</email:body>
+			</email:send>
+			<logger level="INFO" doc:name="emailResponse" doc:id="93555137-e4cb-4b50-bc29-8d9f15f769e2" message='#["emailSend Successfully"]'/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6f3d9eb5-c37f-482f-8992-7f5885ddbbf7" type="ANY" >
+					<ee:transform doc:name="emailErrorResponse" doc:id="08867722-05f4-4665-b46b-62be95dd1ed4" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "status": "FAILED",
+  "reason": "Notification delivery failed. Logged for retry."
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="exitFlowCheck" doc:id="c29bc17d-fb84-419e-bd86-ad6e24693e64" message='#["Exit Flow entry from : sending-email-subflow"]'/>
+	</sub-flow>
+</mule>

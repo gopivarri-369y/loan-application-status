@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="loan-application-status-db-sapi-main" doc:id="735142f8-f819-431f-89cd-a49d9d83ab1c">
+        <http:listener path="/api/*" config-ref="loan-application-status-db-sapi-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+		<logger level="INFO" doc:name="apiEntryCheck" doc:id="99cca506-b234-4e2d-ac27-f2fb92b93679" message='#["entrying into the api : loan-application-status-db-sapi-main"]'/>
+		<apikit:router config-ref="loan-application-status-db-sapi-config" doc:name="APIkit Router."/>
+		<logger level="INFO" doc:name="apiExitCheck" doc:id="95efe879-ae69-4969-a641-1177d10bdd27" message='#["exiting from the api : loan-application-status-db-sapi-main"]'/>
+		<error-handler ref="global-error-handlersError_Handler" />
+    </flow>
+    <flow name="put:\updateloanrecords:application\json:loan-application-status-db-sapi-config" doc:id="b7c50df5-75cc-4a5b-9d0e-4cff9cc3e689">
+		<flow-ref doc:name="loan-application-status-update-loanStatus-Sub_Flow" doc:id="e06503d5-cf51-4494-a604-d11a31124c8d" name="loan-application-status-update-loanStatus-Sub_Flow"/>
+    </flow>
+    <flow name="post:\fetchingdata:application\json:loan-application-status-db-sapi-config" doc:id="3c0c4e91-c780-4696-895f-a7241c1bba41">
+		<flow-ref doc:name="loan-application-status-fetch-Records-Sub_Flow" doc:id="095b0c73-90d5-4c23-8ab6-f1ecbca15e0a" name="loan-application-status-fetch-Records-Sub_Flow"/>
+    </flow>
+</mule>

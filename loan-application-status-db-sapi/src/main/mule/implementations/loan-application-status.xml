@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:snowflake="http://www.mulesoft.org/schema/mule/snowflake"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/snowflake http://www.mulesoft.org/schema/mule/snowflake/current/mule-snowflake.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<!-- [STUDIO:"loan-application-status-create-loanuserSub_Flow"]<sub-flow name="loan-application-status-create-loanuserSub_Flow" doc:id="990cecb5-d0f8-4f00-a106-172ca65acbec" >
+		<logger level="INFO" doc:name="FLowStartCheck" doc:id="e56eda4e-5970-45fd-90d2-0ea1194f1452" message='#["entered into the sub flow loan-application-status-create-loanuserSub_Flow From the flowReference :  put:\loanStatusUpdate\(id):application\json:loan-application-status-db-sapi-config"&#93;'/>
+		<logger level="DEBUG" doc:name="SnowFlakeEntryCheck" doc:id="97ff56a2-bdb1-4deb-9d7a-00fccaea6cf7" message='#[{&#10;	"message" : "trying To Insert the payload",&#10;	"payload" : payload&#10;}&#93;' category="loan"/>
+		<snowflake:insert doc:name="Insert" doc:id="0173b57a-df9b-40f5-aeb3-c1e81cc77d45" config-ref="Snowflake_Config">
+			<snowflake:sql ><![CDATA[INSERT INTO loanapplications (loan_id, applicant_id, status, updated_by, timestamp, remarks) 
+VALUES (:loanId, :applicantId, :status, :updatedBy, :timestamp, :remarks)
+&#93;&#93;></snowflake:sql>
+			<snowflake:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+&#45;&#45;-
+{
+  loanId: payload.loanId,
+  applicantId: payload.applicantId,
+  status: payload.status,
+  updatedBy: payload.updatedBy,
+  timestamp: payload.timestamp as DateTime,
+  remarks: payload.remarks
+}&#93;&#93;&#93;></snowflake:input-parameters>
+		</snowflake:insert>
+		<logger level="DEBUG" doc:name="snowFlakeResponseCheck" doc:id="0ab509e9-09db-450b-9c98-945285e4f34c" message='#[{&#10;	"message" : "operation is successfuly done",&#10;	"response" : payload&#10;}&#93;' category="loan"/>
+		<ee:transform doc:name="ResponsePayload" doc:id="301fb130-c140-4af9-9c7a-a94f2f57db67" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+&#45;&#45;-
+payload&#93;&#93;></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="FlowEndResponse" doc:id="10e4ac3c-346c-4e7d-adde-bf7f51eccbb1" message='#["Exiting From the subFlow loan-application-status-create-loanuserSub_Flow"&#93;'/>
+	</sub-flow> [STUDIO] -->
+	<sub-flow name="loan-application-status-fetch-Records-Sub_Flow" doc:id="c0febc78-efab-48f1-95ab-6d86133e066e" >
+		<logger level="INFO" doc:name="FlowStartCheck" doc:id="920791de-b3d3-44a1-bfcf-1cdc8da0adff" message='#[{&#10;	"entry flow " : "loan-application-status-fetch-applicantsSub_Flow",&#10;	"reference" : "get:\loanStatusUpdate\(applicantId):loan-application-status-db-sapi-config"&#10;}]'/>
+		<logger level="DEBUG" doc:name="snowflakeEntryCheck" doc:id="d19899a1-3441-4b9c-ae22-2b3bfb9b4afb" message='#[{&#10;	"message" : "try to fetch the database through the salesforce select connector"&#10;}]' category="loan"/>
+		<snowflake:select doc:name="fetching Data" doc:id="513b281c-1eb1-4820-b277-85d05e0e7425" config-ref="Snowflake_Config">
+			<snowflake:sql ><![CDATA[#[payload.dynamicQuery]]]></snowflake:sql>
+		</snowflake:select>
+		<logger level="DEBUG" doc:name="snowflakeExitCheck" doc:id="d928fde5-7685-49e6-ac7b-3fb6fa6e0e0b" message='#[output application/json&#10;---&#10;{&#10;	"message" : "exiting from the snowfalke database",&#10;	"response" : payload&#10;}]' category="loan"/>
+		<ee:transform doc:name="ResponsePayload" doc:id="94747a38-bb8c-46fc-bb88-96e2a5777d21" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="FlowEndResponse" doc:id="909988b1-7af2-41be-9478-82fed3087e4d" message='#["Exiting From the subFlow loan-application-status-fetch-applicantsSub_Flow"]' />
+	</sub-flow>
+	<sub-flow name="loan-application-status-update-loanStatus-Sub_Flow" doc:id="aae46522-1bfd-41c1-a63a-672cffe7acd1" >
+		<logger level="INFO" doc:name="FLowEntryCheck" doc:id="688aead6-a86e-4e28-a885-754b05be82c0" message='#["entered into the flow : loan-application-status-update-loanStatus-Sub_Flow "]'/>
+		<logger level="DEBUG" doc:name="snowflakeEntryCheck" doc:id="7b7d1952-4669-4cc1-a1b2-fb110c079642" message='#["calling the snowflake for the updation"]' category="loan"/>
+		<snowflake:update doc:name="Update" doc:id="572ca685-2217-457c-8925-6e7f810091df" config-ref="Snowflake_Config">
+			<snowflake:sql><![CDATA[UPDATE loanapplications 
+SET applicant_id = :applicantId, 
+    status = :status, 
+    updated_by = :updatedBy, 
+    timestamp = :timestamp, 
+    remarks = :remarks 
+WHERE loan_id = :loanId
+]]></snowflake:sql>
+			<snowflake:input-parameters><![CDATA[#[{
+  "loanId": payload.loanId,
+  "applicantId": payload.applicantId,
+  "status": payload.status,
+  "updatedBy": payload.updatedBy,
+  "timestamp": payload.timestamp,
+  "remarks": payload.remarks
+}]]]></snowflake:input-parameters>
+		</snowflake:update>
+		<logger level="DEBUG" doc:name="snowflakeExitCheck" doc:id="94a0e7b3-11a7-4b0b-b284-2bd684ad30b3" message='#[output application/json&#10;---&#10;{&#10;"message" : "snowflake updation operation is done " ,&#10;"response" : "payload"&#10;}]' category="loan"/>
+		<ee:transform doc:name="Transform Message" doc:id="113bb40a-939b-4b34-bd6c-06ce194eb73e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status" : "success",
+	"message" : "data updated successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="FlowExitCheck" doc:id="7b1c7a8c-2ef2-4f1b-99b5-6d997e2b91ca" message='#["exiting from the flow : loan-application-status-update-loanStatus-Sub_Flow "]'/>
+	</sub-flow>
+</mule>

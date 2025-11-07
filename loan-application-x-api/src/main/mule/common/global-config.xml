@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd">
+	<http:request-config name="callin-papi-api" doc:name="HTTP Request configuration" doc:id="ed42d725-f866-4112-afa3-24a7256ef198" basePath="/${papi-request.basepath}" >
+		<http:request-connection host="${papi-request.host}"/>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="17e0b315-3aa3-4f39-8632-70dd852390c0" file="config\config-properties-${mule.env}.yaml" />
+	<http:listener-config name="loan-application-status-x-api-httpListenerConfig" doc:name="HTTP Listener config" doc:id="ac4f5eac-5f5a-4fa7-80b8-04c2171d9565" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<apikit:config outboundHeadersMapName="outboundHeadersMapName" httpStatusVarName="httpStatus" doc:name="Router" doc:id="ee59e89a-0e1b-4b9d-ad32-837f48610ff0" name="loan-application-status-x-api-config" api="resource::4f105f33-ac28-42d4-8771-e2e0cfeb419d:loan-application-status-x-api:1.0.1:raml:zip:loan-application-status-x-api.raml" />
+	<api-gateway:autodiscovery apiId="20590261" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="63c4dd27-9db8-40f2-950b-75bb2ebb1ec7" flowRef="loan-application-status-x-api-main" />
+</mule>
