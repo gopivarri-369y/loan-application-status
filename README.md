@@ -1,47 +1,90 @@
 # Loan Application Status API
 
-A MuleSoft-based three-tier API architecture for managing and tracking loan application status updates with comprehensive validation, error handling, and email notifications.
+![License MIT](https://img.shields.io/badge/license-MIT-green.svg) ![Mule Runtime](https://img.shields.io/badge/mule%20runtime-4.4%2B-blue.svg) ![Coverage](https://img.shields.io/badge/munit_coverage-88%E2%80%9395%25-success.svg)
 
-## Architecture Overview
+> A client-ready MuleSoft solution that keeps borrowers, lenders, and operations teams aligned on every loan application status update.
 
-This project implements a layered API architecture following MuleSoft best practices:
+## Quick Summary
+- **What it does:** Tracks, validates, and shares loan status changes in real time.
+- **Who uses it:** Digital channels, back-office teams, and operations dashboards.
+- **Why clients love it:** Fewer manual follow-ups, auditable decisions, and proactive notifications.
 
-- **Experience API (X-API)**: `loan-application-status-x-api` - Entry point for external clients
-- **Process API (P-API)**: `loan-application-status-papi` - Business logic and orchestration layer
-- **System API (S-API)**: `loan-application-status-db-s-api` - Database integration layer
+## Table of Contents
+- [Business Value](#business-value)
+- [Solution Overview](#solution-overview)
+- [Architecture](#architecture)
+- [Key Features](#key-features)
+- [API Catalogue](#api-catalogue)
+- [Sample Request & Responses](#sample-request--responses)
+- [Rules & Safeguards](#rules--safeguards)
+- [Data Model](#data-model)
+- [Getting Started](#getting-started)
+- [Running the Solution](#running-the-solution)
+- [Testing & Quality](#testing--quality)
+- [Deployment Options](#deployment-options)
+- [Operations Playbook](#operations-playbook)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License & Contact](#license--contact)
+- [Acknowledgments](#acknowledgments)
 
-## Features
+## Business Value
+- **Transparent communication:** Keeps applicants and advisors informed at every milestone.
+- **Compliance ready:** Enforces mandatory remarks and validates audit-critical timestamps.
+- **Operational efficiency:** Reduces duplicate work and manual reconciliation.
+- **Faster decisions:** Automates routing to the right downstream processes and teams.
 
-- **Comprehensive Validation**: Validates loan ID, applicant ID, status transitions, timestamps, and required fields
-- **Status Transition Management**: Enforces valid state transitions (e.g., prevents moving from 'Disbursed' to 'Under Review')
-- **Duplicate Detection**: Prevents duplicate status updates for the same loan
-- **Email Notifications**: Sends automated email alerts for failures and successful updates
-- **Error Handling**: Centralized error handling with detailed error messages
-- **Database Integration**: Snowflake database connectivity for data persistence
-- **High Test Coverage**: ~85-95% MUnit test coverage across all layers
+## Solution Overview
+- **Layered MuleSoft stack:** Dedicated Experience, Process, and System APIs for scalability.
+- **Smart validations:** Stops invalid transitions before they reach core systems.
+- **Actionable alerts:** Email notifications highlight both success and exception scenarios.
+- **High reliability:** MUnit automation covers core happy paths and edge cases.
 
-## API Endpoints
+## Architecture
 
-### Experience API (X-API)
+```mermaid
+flowchart LR
+    Client[Client Channels
+    (Web, Mobile, Ops Portal)]
+    XAPI[Experience API
+    loan-application-status-x-api]
+    PAPI[Process API
+    loan-application-status-papi]
+    SAPI[System API
+    loan-application-status-db-s-api]
+    DB[(Snowflake Database)]
+
+    Client --> XAPI --> PAPI --> SAPI --> DB
+    PAPI -->|Email Alerts| SMTP[SMTP Server]
 ```
-POST /api/loan/status/update
-```
 
-### Process API (P-API)
-```
-POST /loanStatus
-POST /status
-```
+| Layer | Description | Client Benefit |
+| --- | --- | --- |
+| Experience API | Public endpoint for digital channels. Handles payload validation and client-friendly responses. | Faster onboarding with a stable, well-documented contract. |
+| Process API | Applies business rules, manages transitions, orchestrates persistence and notifications. | Confidence that every update respects internal policy. |
+| System API | Encapsulates Snowflake operations and data access. | Protects core data while enabling rapid integration. |
 
-### System API (S-API)
-```
-GET /loanStatus/{loanId}
-POST /fetchingdata
-PUT /updateloanrecords
-```
+## Key Features
+- **End-to-end validation:** Ensures every update carries valid IDs, timestamps, and remarks.
+- **Status lifecycle control:** Blocks illegal moves (for example, reverting from `Disbursed` back to `Under Review`).
+- **Duplicate shielding:** Detects and ignores repeat messages so downstream analytics stay clean.
+- **Automated messaging:** Notifies stakeholders about successful updates or action-required errors.
+- **Rich logging:** Correlation IDs and payload snapshots make audits and RCA straightforward.
 
-## Request Payload
+## API Catalogue
 
+| Layer | Method & Path | Purpose |
+| --- | --- | --- |
+| Experience | `POST /api/loan/status/update` | Primary endpoint for submitting status changes. |
+| Process | `POST /loanStatus` | Orchestrates validation and persistence. |
+| Process | `POST /status` | Helper endpoint for internal workflows. |
+| System | `GET /loanStatus/{loanId}` | Retrieves current status for a loan. |
+| System | `POST /fetchingdata` | Supports applicant lookup and verification. |
+| System | `PUT /updateloanrecords` | Saves approved status transitions. |
+
+## Sample Request & Responses
+
+### Example Request
 ```json
 {
   "loanId": "LN20251005",
@@ -53,16 +96,7 @@ PUT /updateloanrecords
 }
 ```
 
-### Required Fields
-- `loanId`: Unique loan identifier
-- `applicantId`: Unique applicant identifier
-- `status`: Current status of the loan
-- `timestamp`: ISO 8601 format (yyyy-MM-dd'T'HH:mm:ssZ)
-- `remarks`: Required for 'Rejected' or 'On Hold' status
-
-## Response Examples
-
-### Success Response
+### Successful Update
 ```json
 {
   "status": "SUCCESS",
@@ -70,117 +104,60 @@ PUT /updateloanrecords
 }
 ```
 
-### Error Responses
+### Common Error Scenarios
 
-**Missing Required Fields**
-```json
-{
-  "status": "failed",
-  "reason": "required key [status] not found required key [loanId] not found"
-}
-```
+| Scenario | Client-Friendly Response |
+| --- | --- |
+| Missing required fields | `{ "status": "failed", "reason": "required key [status] not found required key [loanId] not found" }` |
+| Timestamp missing timezone | `{ "status": "failed", "reason": "/timestamp [2025-10-28T19:00:00] is not a valid date time. Expected [yyyy-MM-dd'T'HH:mm:ssZ]" }` |
+| Applicant ID not found | `{ "status": "Failure", "response": "given ApplicantId APP100 is Not Found" }` |
+| Loan/applicant mismatch | `{ "status": "FAILED", "reason": "Loan ID LN2025100 does not match with the APP1005" }` |
+| Invalid status step | `{ "status": "FAILED", "reason": "Invalid Transition: cannot move from Received to Rejected" }` |
+| Missing remarks for rejection | `{ "status": "failed", "reason": "required key [remarks] not found" }` |
+| Duplicate update | `{ "status": "IGNORED", "reason": "Duplicate loan update received for LN20251001 with same status." }` |
 
-**Invalid Timestamp**
-```json
-{
-  "status": "failed",
-  "reason": "/timestamp [2025-10-28T19:00:00] is not a valid date time. Expected [yyyy-MM-dd'T'HH:mm:ssZ]"
-}
-```
+## Rules & Safeguards
+1. **Mandatory fields:** `loanId`, `applicantId`, `status`, `timestamp`, `updatedBy` always required.
+2. **Timestamp format:** Enforces ISO 8601 with timezone to preserve audit integrity.
+3. **Applicant validation:** Checks applicant existence before allowing updates.
+4. **Loan-applicant pairing:** Rejects mismatched IDs to prevent data corruption.
+5. **Remarks policy:** Enforced when status equals `Rejected` or `On Hold`.
+6. **Duplicate control:** Ignores identical consecutive updates.
+7. **Status guardrails:** Only allows sanctioned transitions in the lifecycle table below.
 
-**Applicant ID Not Found**
-```json
-{
-  "status": "Failure",
-  "response": "given ApplicantId APP100 is Not Found"
-}
-```
+### Status Lifecycle
 
-**Loan ID & Applicant ID Mismatch**
-```json
-{
-  "status": "FAILED",
-  "reason": "Loan ID LN2025100 does not match with the APP1005"
-}
-```
+| Current Status | Allowed Next Status | Business Rationale |
+| --- | --- | --- |
+| `Received` | `Under Review` | Moves application into initial assessment. |
+| `Under Review` | `Approved`, `Rejected`, `On Hold` | Decision or additional information required. |
+| `Approved` | `Disbursed` | Final funding step. |
+| `Disbursed` | _None_ | Terminal state; prevents accidental rollbacks. |
 
-**Invalid Status Transition**
-```json
-{
-  "status": "FAILED",
-  "reason": "Invalid Transition: cannot move from Received to Rejected"
-}
-```
+## Data Model
 
-**Missing Remarks**
-```json
-{
-  "status": "failed",
-  "reason": "required key [remarks] not found"
-}
-```
+| Table | Role | Key Columns |
+| --- | --- | --- |
+| `LOAN_APPLICANTS` | Applicant master data. | `APPLICANT_ID`, `APPLICANT_NAME`, profile fields. |
+| `LOAN_APPLICATIONS` | Status history ledger. | `LOAN_ID`, `APPLICANT_ID`, `STATUS`, `REMARKS`, `UPDATED_BY`, `TIMESTAMP`. |
 
-**Duplicate Status**
-```json
-{
-  "status": "IGNORED",
-  "reason": "Duplicate loan update received for LN20251001 with same status."
-}
-```
+## Getting Started
 
-## Validation Rules
+### Prerequisites
+- Anypoint Studio 7.x or later.
+- Mule Runtime 4.4.x or later.
+- Java 8 or 11.
+- Snowflake account (schema, warehouse, network access).
+- SMTP credentials (for example, Gmail app password) for email alerts.
 
-1. **Mandatory Field Validation**: `loanId` and `status` are required
-2. **Timestamp Format**: Must follow ISO 8601 format
-3. **Applicant ID Verification**: Validates applicant exists in database
-4. **Loan-Applicant Mapping**: Ensures applicant ID matches with loan ID
-5. **Remarks Requirement**: Mandatory for 'Rejected' or 'On Hold' status
-6. **Duplicate Detection**: Prevents same status updates
-7. **Transition Validation**: Enforces valid status transitions
-
-## Valid Status Transitions
-
-The API enforces the following status transition rules:
-- `Received` → `Under Review`
-- `Under Review` → `Approved` / `Rejected` / `On Hold`
-- `Approved` → `Disbursed`
-- Invalid transitions (e.g., `Disbursed` → `Under Review`) are rejected
-
-## Database Schema
-
-### Tables
-- **LOAN_APPLICANTS**: Stores applicant information
-  - `APPLICANT_ID`
-  - `APPLICANT_NAME`
-  - Other applicant details
-
-- **LOAN_APPLICATIONS**: Stores loan application records
-  - `LOAN_ID`
-  - `APPLICANT_ID`
-  - `STATUS`
-  - `REMARKS`
-  - `UPDATED_BY`
-  - `TIMESTAMP`
-
-## Prerequisites
-
-- **Anypoint Studio** 7.x or higher
-- **Mule Runtime** 4.4.x or higher
-- **Java** 8 or 11
-- **Snowflake Database** connection
-- **SMTP Configuration** for email notifications
-
-## Installation & Setup
-
-### 1. Clone the Repository
+### Clone the Repository
 ```bash
 git clone https://github.com/yourusername/loan-application-status-api.git
 cd loan-application-status-api
 ```
 
-### 2. Configure Environment Properties
-
-Update `src/main/resources/config.yaml` with your environment-specific values:
+### Configure Environment Settings
+Update `src/main/resources/config.yaml` with environment-specific values:
 
 ```yaml
 # Database Configuration
@@ -212,9 +189,8 @@ email:
   password: ${secure::email.password}
 ```
 
-### 3. Configure Secure Properties
-
-Create or update `src/main/resources/config-secure.yaml`:
+### Secure Credentials
+Maintain secrets in `src/main/resources/config-secure.yaml`:
 
 ```yaml
 db:
@@ -226,65 +202,46 @@ email:
   password: "your-app-password"
 ```
 
-### 4. Import Projects into Anypoint Studio
-
-1. Open Anypoint Studio
-2. File → Import → Anypoint Studio → Anypoint Studio project from File System
-3. Import all three projects:
+### Import Projects into Anypoint Studio
+1. Open Anypoint Studio.
+2. Go to **File → Import → Anypoint Studio → Anypoint Studio project from File System**.
+3. Import all three modules:
    - `loan-application-status-x-api`
    - `loan-application-status-papi`
    - `loan-application-status-db-s-api`
 
-### 5. Run the Applications
+## Running the Solution
+Start services in dependency order to avoid connection failures:
+1. **System API (S-API)** — Port `8083`.
+2. **Process API (P-API)** — Port `8082`.
+3. **Experience API (X-API)** — Port `8081`.
 
-Start applications in this order:
-1. System API (S-API) - Port 8083
-2. Process API (P-API) - Port 8082
-3. Experience API (X-API) - Port 8081
+> Tip: Use dedicated run configurations so each application’s logs remain easy to trace.
 
-## Testing
+## Testing & Quality
 
-### Run MUnit Tests
+### Automated Coverage (MUnit)
 
-Each API layer includes comprehensive MUnit test suites:
+| API Layer | Command | Coverage |
+| --- | --- | --- |
+| System API | `mvn clean test -f loan-application-status-db-s-api/pom.xml` | 94.74% |
+| Process API | `mvn clean test -f loan-application-status-papi/pom.xml` | 88.46% |
+| Experience API | `mvn clean test -f loan-application-status-x-api/pom.xml` | 92.86% |
 
-**System API Tests**
-```bash
-mvn clean test -f loan-application-status-db-s-api/pom.xml
-```
+### Manual Regression (Postman)
+Use the supplied Postman collection to validate:
+- Successful status update.
+- Missing field handling.
+- Timestamp formatting error.
+- Applicant not found scenario.
+- Loan/applicant mismatch.
+- Invalid transition error.
+- Remarks requirement enforcement.
+- Duplicate update rejection.
 
-**Process API Tests**
-```bash
-mvn clean test -f loan-application-status-papi/pom.xml
-```
+## Deployment Options
 
-**Experience API Tests**
-```bash
-mvn clean test -f loan-application-status-x-api/pom.xml
-```
-
-### Test Coverage
-- **X-API**: 92.86%
-- **P-API**: 88.46%
-- **S-API**: 94.74%
-
-### Manual Testing with Postman
-
-Import the provided Postman collection and test various scenarios:
-
-1. **Success Scenario**
-2. **Missing Fields Validation**
-3. **Invalid Timestamp Format**
-4. **Applicant Not Found**
-5. **Loan-Applicant Mismatch**
-6. **Invalid Status Transition**
-7. **Missing Remarks**
-8. **Duplicate Status Detection**
-
-## Deployment
-
-### Deploy to CloudHub
-
+### CloudHub (Recommended for managed environments)
 ```bash
 mvn clean deploy -DmuleDeploy \
   -Danypoint.username=your-username \
@@ -294,92 +251,54 @@ mvn clean deploy -DmuleDeploy \
   -DworkerType=MICRO
 ```
 
-### Deploy to On-Premises
-
+### On-Premises Mule Runtime
 1. Package the application:
-```bash
-mvn clean package
-```
+   ```bash
+   mvn clean package
+   ```
+2. Deploy the generated JAR from `target/` into the target Mule runtime.
 
-2. Deploy the generated JAR from `target/` to your Mule Runtime
+## Operations Playbook
 
-## Project Structure
+### Error Handling
+- **APIKit errors:** Return descriptive messages for BAD_REQUEST, NOT_FOUND, METHOD_NOT_ALLOWED.
+- **Database faults:** Include correlation IDs and key context for quick triage.
+- **Business rule violations:** Provide actionable feedback to calling channels.
+- **Unhandled exceptions:** Captured by global handlers to ensure consistent client experience.
 
-```
-loan-application-status-api/
-├── loan-application-status-x-api/
-│   ├── src/main/mule/
-│   │   ├── loan-application-status-x-api-main.xml
-│   │   ├── calling-process-api.xml
-│   │   └── global-error-handlers.xml
-│   └── src/test/munit/
-│       └── loan-application-status-x-api-test-suite.xml
-├── loan-application-status-papi/
-│   ├── src/main/mule/
-│   │   ├── loan-application-status-papi.xml
-│   │   ├── validating-newstaus.xml
-│   │   ├── common-flows.xml
-│   │   └── global-error-handlers.xml
-│   └── src/test/munit/
-│       └── loan-application-status-papi-test-suite.xml
-└── loan-application-status-db-s-api/
-    ├── src/main/mule/
-    │   ├── loan-application-status-db-sapi-main.xml
-    │   ├── loan-application-status-db-sapi.xml
-    │   └── global-error-handlers.xml
-    └── src/test/munit/
-        └── loan-application-status-db-sapi-test-suite.xml
-```
+### Notifications
+Emails are triggered for:
+- Validation failures and business rule breaches.
+- Successful status updates (optional distribution lists).
+- Applicant mismatches and invalid transitions.
 
-## Error Handling
+### Logging & Auditing
+- Correlation IDs trace requests from X-API to S-API.
+- Entry/exit logs for every flow support performance dashboards.
+- Error logs capture stack traces and business payloads (masking sensitive data where required).
+- Payload snapshots enable compliance audits.
 
-The API implements a centralized error handling strategy:
-
-- **APIKit Errors**: BAD_REQUEST, NOT_FOUND, METHOD_NOT_ALLOWED
-- **Database Errors**: Connection failures, SQL syntax errors
-- **Validation Errors**: Business rule violations
-- **System Errors**: Unexpected runtime exceptions
-
-All errors are logged with correlation IDs for traceability.
-
-## Email Notifications
-
-Automated email notifications are sent for:
-- Validation failures
-- Business rule violations
-- Successful status updates
-- Applicant ID mismatches
-- Invalid transitions
-
-## Logging
-
-The application uses structured logging with:
-- **Correlation ID**: For request tracing
-- **Flow Entry/Exit**: For performance monitoring
-- **Error Details**: For debugging
-- **Payload Snapshots**: For audit trails
+## Troubleshooting
+- **Port conflicts:** Ensure `8081`, `8082`, `8083` are free before starting.
+- **SMTP errors:** Confirm TLS settings and app password validity.
+- **Snowflake authentication:** Check warehouse status and network policies.
+- **Unexpected duplicates:** Clear deduplication cache or adjust testing cadence.
+- **Timestamp validation:** Verify client payloads include timezone offset (`Z` or `+/-HH:MM`).
 
 ## Contributing
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit your updates: `git commit -m "Add some feature"`.
+4. Push to origin: `git push origin feature/your-feature`.
+5. Open a pull request describing changes and validation steps.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add some feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-For questions or support, please contact:
-- **Developer**: Your Name
-- **Email**: your.email@example.com
-- **Organization**: Your Organization
+## License & Contact
+- License: MIT — see `LICENSE` for details.
+- Developer: Your Name
+- Email: your.email@example.com
+- Organization: Your Organization
 
 ## Acknowledgments
-
 - MuleSoft Documentation
 - Anypoint Platform
 - Snowflake Database Documentation
